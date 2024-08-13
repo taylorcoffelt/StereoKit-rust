@@ -18,7 +18,7 @@ fn main() {
     // Build StereoKit, and tell rustc to link it.
     let mut cmake_config = cmake::Config::new("StereoKit");
 
-    if cfg!(feature = "local-deps") {
+    if cfg!(feature = "force-local-deps") {
         cmake_config.define("CPM_USE_LOCAL_PACKAGES", "ON");
         cmake_config.define("CPM_FORCE_LOCAL_PACKAGES", "ON");
     }
