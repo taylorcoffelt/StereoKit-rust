@@ -20,6 +20,7 @@ fn main() {
 
     if cfg!(feature = "local-deps") {
         cmake_config.define("CPM_USE_LOCAL_PACKAGES", "ON");
+        cmake_config.define("CPM_FORCE_LOCAL_PACKAGES", "ON");
     }
 
     cmake_config.define("SK_BUILD_SHARED_LIBS", "OFF");
