@@ -22,6 +22,10 @@ fn main() {
         cmake_config.define("CPM_USE_LOCAL_PACKAGES", "ON");
         cmake_config.define("CPM_LOCAL_PACKAGES_ONLY", "ON");
         cmake_config.define("CPM_DOWNLOAD_ALL", "OFF");
+        let openxr_loader_source = env::var("openxr_loader_source");
+        if openxr_loader_source.is_ok(){
+          cmake_config.define("CPM_openxr_loader_SOURCE", openxr_loader_source.unwrap());
+        }
     }
 
     cmake_config.define("SK_BUILD_SHARED_LIBS", "OFF");
