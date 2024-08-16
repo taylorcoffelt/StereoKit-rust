@@ -22,9 +22,21 @@ fn main() {
         cmake_config.define("CPM_USE_LOCAL_PACKAGES", "ON");
         cmake_config.define("CPM_LOCAL_PACKAGES_ONLY", "ON");
         cmake_config.define("CPM_DOWNLOAD_ALL", "OFF");
-        let openxr_loader_source = env::var("openxr_loader_source");
+        let openxr_loader_source = env::var("DEP_OPENXR_LOADER_SOURCE");
         if openxr_loader_source.is_ok(){
           cmake_config.define("CPM_openxr_loader_SOURCE", openxr_loader_source.unwrap());
+        }
+        let meshoptimizer_source = env::var("DEP_MESHOPTIMIZER_SOURCE");
+        if meshoptimizer_source.is_ok(){
+          cmake_config.define("CPM_meshoptimizer_SOURCE", meshoptimizer_source.unwrap());
+        }
+        let basis_universal_source = env::var("DEP_BASIS_UNIVERSAL_SOURCE");
+        if basis_universal_source.is_ok(){
+          cmake_config.define("CPM_basis_universal_SOURCE", basis_universal_source.unwrap());
+        }
+        let sk_gpu_source = env::var("DEP_SK_GPU_SOURCE");
+        if sk_gpu_source.is_ok(){
+          cmake_config.define("CPM_sk_gpu_SOURCE", sk_gpu_source.unwrap());
         }
     }
 
