@@ -19,17 +19,13 @@ fn main() {
     // Build StereoKit, and tell rustc to link it.
     let mut cmake_config = Config::new("StereoKit");
 
-    if var("FORCE_LOCAL_DEPS").ok().is_some() {
+    if cfg!(feature = "force-local-deps") && var("FORCE_LOCAL_DEPS").ok().is_some() {
         // Helper function to define optional dependencies
         fn define_if_exists(var_name: &str, cmake_var: &str, config: &mut Config) {
             if let Some(value) = var(var_name).ok() {
                 config.define(cmake_var, value);
             }
         }
-        cmake_config
-            .define("CPM_USE_LOCAL_PACKAGES", "ON")
-            .define("CPM_LOCAL_PACKAGES_ONLY", "ON")
-            .define("CPM_DOWNLOAD_ALL", "OFF");
 
         define_if_exists("DEP_OPENXR_LOADER_SOURCE", "CPM_openxr_loader_SOURCE", &mut cmake_config);
         define_if_exists("DEP_MESHOPTIMIZER_SOURCE", "CPM_meshoptimizer_SOURCE", &mut cmake_config);
