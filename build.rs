@@ -19,7 +19,7 @@ fn main() {
     // Build StereoKit, and tell rustc to link it.
     let mut cmake_config = Config::new("StereoKit");
 
-    if cfg!(feature = "force-local-deps") {
+    if var("FORCE_LOCAL_DEPS").ok().is_some() {
         // Helper function to define optional dependencies
         fn define_if_exists(var_name: &str, cmake_var: &str, config: &mut Config) {
             if let Some(value) = var(var_name).ok() {
