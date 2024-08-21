@@ -1,5 +1,6 @@
 #[allow(dead_code)]
 #[cfg(not(target_os = "android"))]
+#[cfg(feature = "no-event-loop")]
 fn main() {
     use stereokit_rust::{
         maths::{Pose, Quat, Vec3},
@@ -31,3 +32,10 @@ fn main() {
 #[allow(dead_code)]
 #[cfg(target_os = "android")]
 fn main() {}
+
+/// Fake main for event-loop  (rust-analyzer problem as event-loop is the defaut feature )
+#[allow(dead_code)]
+#[cfg(feature = "event-loop")]
+fn main() {
+    panic!("This example works with feature `no_event_loop`!");
+}

@@ -42,18 +42,13 @@ fn main() {
         .define("SK_BUILD_TESTS", "OFF")
         .define("SK_PHYSICS", "OFF");
     if target_os == "android" {
-        cmake_config.define("CMAKE_ANDROID_API", "32")
-            .define("CMAKE_INSTALL_INCLUDEDIR", "install")
-            .define("CMAKE_INSTALL_LIBDIR", "install");
-        if cfg!(feature = "build-dynamic-openxr") {
-            // When you need to build and use Khronos openxr loader use this feature:
-            cmake_config.define("SK_DYNAMIC_OPENXR", "ON")
-                .define("SK_BUILD_OPENXR_LOADER", "ON");
-        } else if cfg!(feature = "dynamic-openxr") {
-            // When you need to ship your own openxr loader use this feature:
-            cmake_config.define("SK_DYNAMIC_OPENXR", "ON");
-        }
+        cmake_config.define("CMAKE_ANDROID_API", "32");
+        cmake_config.define("CMAKE_INSTALL_INCLUDEDIR", "install");
+        cmake_config.define("CMAKE_INSTALL_LIBDIR", "install");
     }
+    cmake_config.define("SK_DYNAMIC_OPENXR", if cfg!(feature = "dynamic-openxr") { "ON" } else { "OFF" });
+    cmake_config.define("SK_BUILD_OPENXR_LOADER", if cfg!(feature = "build-dynamic-openxr") { "ON" } else { "OFF" });
+    cmake_config.define("SK_BUILD_SHARED_LIBS", "OFF");
 
     let dst = cmake_config.build();
 
@@ -61,7 +56,7 @@ fn main() {
     println!("cargo:rustc-link-search=native={}/lib64", dst.display());
     println!("cargo:rustc-link-search=native={}/build", dst.display());
     println!("cargo:rustc-link-search=native={}/install", dst.display());
-    cargo_link!("StereoKitC");
+    cargo_link!("static=StereoKitC");
     match target_family.as_str() {
         "windows" => {
             if cfg!(debug_assertions) {
@@ -84,7 +79,7 @@ fn main() {
             }
             cargo_link!("stdc++");
             cargo_link!("openxr_loader");
-            cargo_link!("meshoptimizer");
+            cargo_link!("static=meshoptimizer");
             if target_os == "android" {
                 cargo_link!("android");
                 cargo_link!("EGL");
