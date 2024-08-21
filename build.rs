@@ -1,4 +1,5 @@
 use std::{env, fs, path::Path};
+use cmake::Config;
 
 macro_rules! cargo_link {
     ($feature:expr) => {
@@ -7,8 +8,8 @@ macro_rules! cargo_link {
 }
 
 fn main() {
-    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
-    let target_family = env::var("CARGO_CFG_TARGET_FAMILY").unwrap();
+    let target_os = var("CARGO_CFG_TARGET_OS").unwrap();
+    let target_family = var("CARGO_CFG_TARGET_FAMILY").unwrap();
 
     if target_os == "macos" {
         println!("cargo:warning=You seem to be building for MacOS! We still enable builds so that rust-analyzer works, but this won't actually build StereoKit so it'll be pretty non-functional.");
@@ -16,41 +17,38 @@ fn main() {
     }
 
     // Build StereoKit, and tell rustc to link it.
-    let mut cmake_config = cmake::Config::new("StereoKit");
+    let mut cmake_config = Config::new("StereoKit");
 
     if cfg!(feature = "force-local-deps") {
-        cmake_config.define("CPM_USE_LOCAL_PACKAGES", "ON");
-        cmake_config.define("CPM_LOCAL_PACKAGES_ONLY", "ON");
-        cmake_config.define("CPM_DOWNLOAD_ALL", "OFF");
-        let openxr_loader_source = env::var("DEP_OPENXR_LOADER_SOURCE");
-        if openxr_loader_source.is_ok(){
-          cmake_config.define("CPM_openxr_loader_SOURCE", openxr_loader_source.unwrap());
+        // Helper function to define optional dependencies
+        fn define_if_exists(var_name: &str, cmake_var: &str, config: &mut Config) {
+            if let Some(value) = var(var_name).ok() {
+                config.define(cmake_var, value);
+            }
         }
-        let meshoptimizer_source = env::var("DEP_MESHOPTIMIZER_SOURCE");
-        if meshoptimizer_source.is_ok(){
-          cmake_config.define("CPM_meshoptimizer_SOURCE", meshoptimizer_source.unwrap());
-        }
-        let basis_universal_source = env::var("DEP_BASIS_UNIVERSAL_SOURCE");
-        if basis_universal_source.is_ok(){
-          cmake_config.define("CPM_basis_universal_SOURCE", basis_universal_source.unwrap());
-        }
-        let sk_gpu_source = env::var("DEP_SK_GPU_SOURCE");
-        if sk_gpu_source.is_ok(){
-          cmake_config.define("CPM_sk_gpu_SOURCE", sk_gpu_source.unwrap());
-        }
+        cmake_config
+            .define("CPM_USE_LOCAL_PACKAGES", "ON")
+            .define("CPM_LOCAL_PACKAGES_ONLY", "ON")
+            .define("CPM_DOWNLOAD_ALL", "OFF");
+
+        define_if_exists("DEP_OPENXR_LOADER_SOURCE", "CPM_openxr_loader_SOURCE", &mut cmake_config);
+        define_if_exists("DEP_MESHOPTIMIZER_SOURCE", "CPM_meshoptimizer_SOURCE", &mut cmake_config);
+        define_if_exists("DEP_BASIS_UNIVERSAL_SOURCE", "CPM_basis_universal_SOURCE", &mut cmake_config);
+        define_if_exists("DEP_SK_GPU_SOURCE", "CPM_sk_gpu_SOURCE", &mut cmake_config);
     }
 
-    cmake_config.define("SK_BUILD_SHARED_LIBS", "OFF");
-    cmake_config.define("SK_BUILD_TESTS", "OFF");
-    cmake_config.define("SK_PHYSICS", "OFF");
+    cmake_config
+        .define("SK_BUILD_SHARED_LIBS", "OFF")
+        .define("SK_BUILD_TESTS", "OFF")
+        .define("SK_PHYSICS", "OFF");
     if target_os == "android" {
-        cmake_config.define("CMAKE_ANDROID_API", "32");
-        cmake_config.define("CMAKE_INSTALL_INCLUDEDIR", "install");
-        cmake_config.define("CMAKE_INSTALL_LIBDIR", "install");
+        cmake_config.define("CMAKE_ANDROID_API", "32")
+            .define("CMAKE_INSTALL_INCLUDEDIR", "install")
+            .define("CMAKE_INSTALL_LIBDIR", "install");
         if cfg!(feature = "build-dynamic-openxr") {
             // When you need to build and use Khronos openxr loader use this feature:
-            cmake_config.define("SK_DYNAMIC_OPENXR", "ON");
-            cmake_config.define("SK_BUILD_OPENXR_LOADER", "ON");
+            cmake_config.define("SK_DYNAMIC_OPENXR", "ON")
+                .define("SK_BUILD_OPENXR_LOADER", "ON");
         } else if cfg!(feature = "dynamic-openxr") {
             // When you need to ship your own openxr loader use this feature:
             cmake_config.define("SK_DYNAMIC_OPENXR", "ON");
@@ -121,8 +119,7 @@ fn main() {
                 if cfg!(feature = "build-dynamic-openxr") {
                     let file_so = dst.join("lib/libopenxr_loader.so");
                     let _lib_o = fs::copy(file_so, dest_file_so).unwrap();
-                } else if let Err(_e) = fs::remove_file(dest_file_so) {
-                }
+                } else if let Err(_e) = fs::remove_file(dest_file_so) {}
             } else {
                 cargo_link!("X11");
                 cargo_link!("Xfixes");
